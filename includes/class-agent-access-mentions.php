@@ -15,7 +15,10 @@ class Agent_Access_Mentions {
 	 * Regex pattern to match @mentions.
 	 * Matches @username where username is 1-60 chars of letters, numbers, underscores, hyphens, or dots.
 	 */
-	const MENTION_PATTERN = '/@([a-zA-Z0-9_.\-]{1,60})\b/';
+	// The negative lookbehind (?<!\w) prevents matching the domain portion of
+	// email addresses (e.g. foo@bar.com would otherwise extract "bar" as a
+	// mention), while still matching @username at a real word boundary.
+	const MENTION_PATTERN = '/(?<!\w)@([a-zA-Z0-9_.\-]{1,60})\b/';
 
 	/**
 	 * Register hooks.
@@ -47,8 +50,10 @@ class Agent_Access_Mentions {
 	 * @param WP_Comment $comment    The comment object.
 	 */
 	public function handle_new_comment( $comment_id, $comment ) {
-		// Skip spam and trash.
-		if ( in_array( $comment->comment_approved, array( 'spam', 'trash' ), true ) ) {
+		// Only notify for approved comments. Skip spam, trash, and held/pending
+		// comments ('0') to prevent unauthenticated visitors from triggering
+		// notification emails before a moderator has reviewed the content.
+		if ( '1' !== (string) $comment->comment_approved ) {
 			return;
 		}
 
@@ -134,14 +139,14 @@ class Agent_Access_Mentions {
 		}
 
 		$post    = get_post( $comment->comment_post_ID );
-		$author  = sanitize_text_field( $comment->comment_author ?: __( 'Someone', 'agent-access' ) );
+		$author  = sanitize_text_field( $comment->comment_author ?: __( 'Someone', 'botcreds-agent-access' ) );
 		$excerpt = wp_trim_words( wp_strip_all_tags( $comment->comment_content ), 40 );
 
-		$post_title = $post ? sanitize_text_field( $post->post_title ) : __( 'a post', 'agent-access' );
+		$post_title = $post ? sanitize_text_field( $post->post_title ) : __( 'a post', 'botcreds-agent-access' );
 
 		$subject = sprintf(
 			/* translators: 1: comment author name, 2: post title */
-			__( '%1$s mentioned you on "%2$s"', 'agent-access' ),
+			__( '%1$s mentioned you on "%2$s"', 'botcreds-agent-access' ),
 			$author,
 			$post_title
 		);
@@ -152,7 +157,7 @@ class Agent_Access_Mentions {
 			/* translators: 1: mentioned user display name, 2: comment author, 3: post title, 4: comment excerpt, 5: comment URL */
 			__(
 				"Hey %1\$s,\n\n%2\$s mentioned you in a comment on \"%3\$s\":\n\n\"%4\$s\"\n\nView the comment:\n%5\$s\n\n—\nAgent Access @ %6\$s",
-				'agent-access'
+				'botcreds-agent-access'
 			),
 			$user->display_name,
 			$author,

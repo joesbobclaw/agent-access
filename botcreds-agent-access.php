@@ -1,14 +1,14 @@
 <?php
 /**
- * Plugin Name: Agent Access
- * Plugin URI:  https://wearebob.blog/agent-access/
+ * Plugin Name: BotCreds Agent Access
+ * Plugin URI:  https://botcreds.com/
  * Description: Connect AI agents to WordPress — manage Application Passwords, track agent content, and @mentions.
  * Version:     2.0.0
  * Author:      Joe Boydston
  * Author URI:  https://wearebob.blog
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: agent-access
+ * Text Domain: botcreds-agent-access
  * Requires at least: 5.6
  * Requires PHP: 7.4
  */
@@ -20,12 +20,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'AGENT_ACCESS_VERSION', '2.0.0' );
 define( 'AGENT_ACCESS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AGENT_ACCESS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'AGENT_ACCESS_APP_PASSWORD_NAME', 'Agent Access' );
+define( 'AGENT_ACCESS_APP_PASSWORD_NAME', 'BotCreds Agent Access' );
 
 require_once AGENT_ACCESS_PLUGIN_DIR . 'includes/class-agent-access-api.php';
 require_once AGENT_ACCESS_PLUGIN_DIR . 'includes/class-agent-access-admin.php';
 require_once AGENT_ACCESS_PLUGIN_DIR . 'includes/class-agent-access-tracker.php';
 require_once AGENT_ACCESS_PLUGIN_DIR . 'includes/class-agent-access-mentions.php';
+require_once AGENT_ACCESS_PLUGIN_DIR . 'includes/class-agent-access-activity-log.php';
 
 /**
  * Initialize the plugin.
@@ -33,10 +34,21 @@ require_once AGENT_ACCESS_PLUGIN_DIR . 'includes/class-agent-access-mentions.php
 function agent_access_init() {
 	$api          = new Agent_Access_API();
 	$admin        = new Agent_Access_Admin( $api );
-	$tracker  = new Agent_Access_Tracker();
-	$mentions = new Agent_Access_Mentions();
+	$tracker      = new Agent_Access_Tracker();
+	$mentions     = new Agent_Access_Mentions();
+	$activity_log = new Agent_Access_Activity_Log();
 	$admin->init();
 	$tracker->init();
 	$mentions->init();
+	$activity_log->init();
 }
 add_action( 'plugins_loaded', 'agent_access_init' );
+
+/**
+ * Create/upgrade the activity log table on activation.
+ */
+function agent_access_activate() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-agent-access-activity-log.php';
+	Agent_Access_Activity_Log::install_table();
+}
+register_activation_hook( __FILE__, 'agent_access_activate' );

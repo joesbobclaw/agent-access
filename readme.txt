@@ -1,4 +1,4 @@
-=== Agent Access ===
+=== BotCreds Agent Access ===
 Contributors: jboydston
 Tags: ai, agents, openclaw, application-passwords, api
 Requires at least: 5.6
@@ -55,7 +55,7 @@ Agent Access manages a single Application Password named "Agent Access" per user
 == Changelog ==
 
 = 2.0.0 =
-* Rebranded from ClawPress to Agent Access.
+* Rebranded and relaunched as BotCreds Agent Access.
 * Removed provisioner and theme-bridge (available as separate add-ons).
 * Security hardening (escaping, nonces, input validation).
 * Added object caching for content stats.
